@@ -53,25 +53,28 @@ data = data.iloc[:,4:]
 train_data = data.values
 print data.head(10)
 # print data.describe()
-exit()
+# exit()
 # print df_train.head(10)
 # Training data features, skip the first column 'Survived'
-# train_features = train_data[:, 1:]  # Fit the model to our training data
-train_features = train_data[:, [7,19,31]]  # Fit the model to our training data
+train_features = train_data[:, 1:]  # Fit the model to our training data
+# train_features = train_data[:, [7,19,31]]  # Fit the model to our training data
 # 'Survived' column values
 train_target = train_data[:, 0]
+# print train_target.reshape(train_target.size,1)
 train_x, test_x, train_y, test_y = train_test_split(train_features,
                                                     train_target,
                                                     test_size=0.20)
+# train_x = tf.nn.l2_normalize(train_x, axis = 0)
+# print train_x
+# exit()
 
-# print train_x.shape
-# print train_y.shape
 train_y = train_y.reshape(train_y.size,1)
-# print test_x.shape
+# print train_y
+# print train_x.shape
 # print train_y.shape
 # exit()
 
-xs = tf.placeholder(tf.float32, [None, 3])
+xs = tf.placeholder(tf.float32, [None, 33])
 ys = tf.placeholder(tf.float32, [None, 1])
 
 # 构建网络模型
@@ -81,16 +84,14 @@ def add_layer(inputs, in_size, out_size, activation_function=None):
     weights = tf.Variable(tf.zeros([in_size, out_size]))
     # 构建偏置 : 1 * out_size 的矩阵
     biases = tf.Variable(tf.zeros([1, out_size]) + 0.1)
-    print "111111111111111111111"
-    print inputs.shape
-    print weights.shape
-    print biases.shape
-
+    # print "111111111111111111111"
+    # print inputs.shape
+    # print weights.shape
+    # print biases.shape
+    inputs = tf.nn.l2_normalize(inputs, axis=0)
 
     # 矩阵相乘
-    Wx_plus_b = tf.matmul(inputs, weights)
-
-    Wx_plus_b += biases
+    Wx_plus_b = tf.matmul(inputs, weights)+biases
 
     if activation_function is None:
         outputs = Wx_plus_b
@@ -99,9 +100,9 @@ def add_layer(inputs, in_size, out_size, activation_function=None):
 
     return outputs  # 得到输出数据
 
-neurons_size = 20
+neurons_size = 100
 # 构建输入层到隐藏层,假设隐藏层有 hidden_layers 个神经元
-h1 = add_layer(xs, 3, neurons_size, activation_function=tf.nn.sigmoid)
+h1 = add_layer(xs, 33, neurons_size, activation_function=tf.nn.sigmoid)
 # 构建隐藏层到隐藏层
 h2 = add_layer(h1, neurons_size, neurons_size, activation_function=tf.nn.relu)
 #构建隐藏层到隐藏层
@@ -128,5 +129,5 @@ with tf.Session() as sess:
 
     for i in range(10000):
         sess.run(train_step, feed_dict={xs: train_x, ys: train_y})
-        if i % 1 == 0:
+        if i % 5 == 0:
             print('num %d loss'%i,sess.run(loss, feed_dict={xs: train_x, ys: train_y}))

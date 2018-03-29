@@ -15,14 +15,15 @@ original_data = pd.read_csv('./data/pm2.5.csv')
 print original_data.describe()
 print original_data.groupby("site_code").size()
 original_data['publish_time'] = pd.to_datetime(original_data['publish_time'])
-print original_data.head(10)
+# print original_data.head(100)
+# exit()
 
 #处理后的数据
 data = original_data[original_data['publish_time']>='2015-12-04']
 for num in range(1,4):
     tmp_data = original_data
     tmp_data['publish_time'] =original_data['publish_time']+datetime.timedelta(days=1)
-    data = pd.merge(data,tmp_data[['site_code','publish_time','AQI','SO2','NO2','CO','O3','PM10','PM2_5','wind_power','wind_direction','temperature','relative_humidity','precipitation']],
+    data = pd.merge(data,tmp_data[['site_code','publish_time','SO2','NO2','CO','O3','PM10','PM2_5','wind_power','wind_direction','temperature','relative_humidity','precipitation']],
                     on=['site_code', 'publish_time'], how='left',suffixes=['', '_'+str(num)])
     #
 # data = data.fillna(0)
