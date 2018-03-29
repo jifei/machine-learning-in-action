@@ -39,25 +39,39 @@ import tensorflow as tf
 import os
 import numpy as np
 import pandas as pd
-import sys
+pd.set_option('display.height',1000)
+pd.set_option('display.max_rows',500)
+pd.set_option('display.max_columns',500)
+pd.set_option('display.width',1000)
+from sklearn.model_selection import train_test_split
+
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
+data = pd.read_csv('./data/process_data_pm2_5.csv')
+data = data.iloc[:,4:]
+train_data = data.values
+print data.head(10)
+# print data.describe()
+exit()
+# print df_train.head(10)
+# Training data features, skip the first column 'Survived'
+# train_features = train_data[:, 1:]  # Fit the model to our training data
+train_features = train_data[:, [7,19,31]]  # Fit the model to our training data
+# 'Survived' column values
+train_target = train_data[:, 0]
+train_x, test_x, train_y, test_y = train_test_split(train_features,
+                                                    train_target,
+                                                    test_size=0.20)
 
-# 生成与加载数据
-# 构造满足一元二次方程的函数
-def Build_Data():
+# print train_x.shape
+# print train_y.shape
+train_y = train_y.reshape(train_y.size,1)
+# print test_x.shape
+# print train_y.shape
+# exit()
 
-        x_data = np.linspace(-1, 1, 300)[:, np.newaxis]
-        # 为了使点更密一些,我们构建了300个点,分布在-1到1 的区间,直接曹永np生成等差数列的方式,并将结果为300个点的一维函数,转换为300 * 1 的二维函数
-        noise = np.random.normal(0, 0.05, x_data.shape)
-        # 加入一些噪声点,使它与x_data的维度一致,并且拟合为均值为0,方差为0.05的正态分布
-        y_data = np.square(x_data) - 0.5 + noise
-        # y = x^2 - 0.5 + 噪声
-        return (x_data,y_data)
-
-
-xs = tf.placeholder(tf.float32, [None, 1])
+xs = tf.placeholder(tf.float32, [None, 3])
 ys = tf.placeholder(tf.float32, [None, 1])
 
 # 构建网络模型
@@ -67,8 +81,17 @@ def add_layer(inputs, in_size, out_size, activation_function=None):
     weights = tf.Variable(tf.zeros([in_size, out_size]))
     # 构建偏置 : 1 * out_size 的矩阵
     biases = tf.Variable(tf.zeros([1, out_size]) + 0.1)
+    print "111111111111111111111"
+    print inputs.shape
+    print weights.shape
+    print biases.shape
+
+
     # 矩阵相乘
-    Wx_plus_b = tf.matmul(inputs, weights) + biases
+    Wx_plus_b = tf.matmul(inputs, weights)
+
+    Wx_plus_b += biases
+
     if activation_function is None:
         outputs = Wx_plus_b
     else:
@@ -78,14 +101,17 @@ def add_layer(inputs, in_size, out_size, activation_function=None):
 
 neurons_size = 20
 # 构建输入层到隐藏层,假设隐藏层有 hidden_layers 个神经元
-l1 = add_layer(xs, 1, neurons_size, activation_function=tf.nn.sigmoid)
+h1 = add_layer(xs, 3, neurons_size, activation_function=tf.nn.sigmoid)
 # 构建隐藏层到隐藏层
-# h2 = add_layer(h1, neurons_size, neurons_size, activation_function=tf.nn.sigmoid)
-# 构建隐藏层到隐藏层
-# h3 = add_layer(h2, neurons_size, neurons_size, activation_function=tf.nn.sigmoid)
+h2 = add_layer(h1, neurons_size, neurons_size, activation_function=tf.nn.relu)
+#构建隐藏层到隐藏层
+h3 = add_layer(h2, neurons_size, neurons_size, activation_function=tf.nn.sigmoid)
 
 # 构建隐藏层到输出层
-prediction = add_layer(l1, neurons_size, 1, activation_function=None)
+prediction = add_layer(h3, neurons_size, 1, activation_function=None)
+
+# print train_y
+# exit(0)
 
 # 接下来构建损失函数: 计算输出层的预测值和真是值间的误差,对于两者差的平方求和,再取平均,得到损失函数.运用梯度下降法,以0.1的效率最小化损失
 loss = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction), reduction_indices=[1]))
@@ -96,12 +122,11 @@ writer = tf.summary.FileWriter(logdir='logs/8_2_BP', graph=tf.get_default_graph(
 writer.close()
 
 # 训练模型
-(x_data,y_data) = Build_Data()
-# 我们让TensorFlow训练1000次,每50次输出训练的损失值:
+# 我们让TensorFlow训练1000次,每500次输出训练的损失值:
 with tf.Session() as sess:
     tf.global_variables_initializer().run()  # 初始化所有变量
 
     for i in range(10000):
-        sess.run(train_step, feed_dict={xs: x_data, ys: y_data})
-        if i % 500 == 0:
-            print('num %d loss'%i,sess.run(loss, feed_dict={xs: x_data, ys: y_data}))
+        sess.run(train_step, feed_dict={xs: train_x, ys: train_y})
+        if i % 1 == 0:
+            print('num %d loss'%i,sess.run(loss, feed_dict={xs: train_x, ys: train_y}))
