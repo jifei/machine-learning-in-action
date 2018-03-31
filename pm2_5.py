@@ -49,7 +49,7 @@ from sklearn.model_selection import train_test_split
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 data = pd.read_csv('./data/process_data_pm2_5.csv')
-data = data.iloc[:,4:]
+data = data.iloc[:,4:16]
 train_data = data.values
 print data.head(10)
 # print data.describe()
@@ -70,11 +70,11 @@ train_x, test_x, train_y, test_y = train_test_split(train_features,
 
 train_y = train_y.reshape(train_y.size,1)
 # print train_y
-# print train_x.shape
+print train_x
 # print train_y.shape
 # exit()
 
-xs = tf.placeholder(tf.float32, [None, 33])
+xs = tf.placeholder(tf.float32, [None, 11])
 ys = tf.placeholder(tf.float32, [None, 1])
 
 # 构建网络模型
@@ -84,11 +84,12 @@ def add_layer(inputs, in_size, out_size, activation_function=None):
     weights = tf.Variable(tf.zeros([in_size, out_size]))
     # 构建偏置 : 1 * out_size 的矩阵
     biases = tf.Variable(tf.zeros([1, out_size]) + 0.1)
-    # print "111111111111111111111"
+    print "111111111111111111111"
     # print inputs.shape
     # print weights.shape
     # print biases.shape
     inputs = tf.nn.l2_normalize(inputs, axis=0)
+    print inputs
 
     # 矩阵相乘
     Wx_plus_b = tf.matmul(inputs, weights)+biases
@@ -100,16 +101,16 @@ def add_layer(inputs, in_size, out_size, activation_function=None):
 
     return outputs  # 得到输出数据
 
-neurons_size = 100
+neurons_size = 10
 # 构建输入层到隐藏层,假设隐藏层有 hidden_layers 个神经元
-h1 = add_layer(xs, 33, neurons_size, activation_function=tf.nn.sigmoid)
+h1 = add_layer(xs, 11, neurons_size, activation_function=tf.nn.sigmoid)
 # 构建隐藏层到隐藏层
-h2 = add_layer(h1, neurons_size, neurons_size, activation_function=tf.nn.relu)
+# h2 = add_layer(h1, neurons_size, neurons_size, activation_function=tf.nn.relu)
 #构建隐藏层到隐藏层
-h3 = add_layer(h2, neurons_size, neurons_size, activation_function=tf.nn.sigmoid)
+# h3 = add_layer(h2, neurons_size, neurons_size, activation_function=tf.nn.sigmoid)
 
 # 构建隐藏层到输出层
-prediction = add_layer(h3, neurons_size, 1, activation_function=None)
+prediction = add_layer(h1, neurons_size, 1, activation_function=None)
 
 # print train_y
 # exit(0)
@@ -127,7 +128,9 @@ writer.close()
 with tf.Session() as sess:
     tf.global_variables_initializer().run()  # 初始化所有变量
 
-    for i in range(10000):
+    for i in range(500):
         sess.run(train_step, feed_dict={xs: train_x, ys: train_y})
-        if i % 5 == 0:
+        if i % 100 == 0:
             print('num %d loss'%i,sess.run(loss, feed_dict={xs: train_x, ys: train_y}))
+    print (sess.run(prediction,feed_dict={xs: train_x, ys: train_y}))
+    print (sess.run(h1,feed_dict={xs: train_x, ys: train_y}))
