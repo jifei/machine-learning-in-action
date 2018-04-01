@@ -104,13 +104,15 @@ from keras import regularizers
 
 
 model = Sequential()  #层次模型
-model.add(Dense(10,input_dim=33,kernel_initializer='glorot_uniform')) #输入层，Dense表示BP层
+model.add(Dense(10,input_dim=33,kernel_initializer='uniform')) #输入层，Dense表示BP层
 model.add(Activation('sigmoid'))  #添加激活函数
 # model.add(Dropout(0.2))
 model.add(Dense(1,input_dim=10))  #输出层
-# model.compile(loss='mean_squared_error', optimizer='adam') #编译模型
-model.compile(loss='mean_squared_error', optimizer='rmsprop') #编译模型
-hist = model.fit(x_train, y_train, epochs=500, batch_size=100,) #训练模型100次
+model.compile(loss='mean_squared_error', optimizer='adam') #编译模型
+# model.compile(loss='mean_squared_error', optimizer='rmsprop') #编译模型
+# model.compile(loss='mean_squared_error', optimizer='SGD') #编译模型
+hist = model.fit(x_train, y_train, epochs=1500, batch_size=100) #训练模型1000次
+
 # print(hist.history)
 
 # model.save_weights(modelfile) #保存模型权重
@@ -136,7 +138,7 @@ for layer in model.layers:
 
 print "test mse:%f"% mean_squared_error(original_test_data['PM2_5'], original_test_data['PM2_5_pred'])
 print "test R2:%f"% r2_score(original_test_data['PM2_5'], original_test_data['PM2_5_pred'])
-outputfile = 'output.csv'
+outputfile = 'output1.csv'
 # print original_test_data.describe()
 # print original_test_data[['PM2_5','PM2_5_pred']].tail(10)
 # exit()
